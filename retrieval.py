@@ -1,10 +1,7 @@
 import os
-from dotenv import load_dotenv
 from langchain_community.document_loaders.csv_loader import CSVLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
-
-load_dotenv()
 
 index_name = 'legal-chatbot'
 embedding = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
