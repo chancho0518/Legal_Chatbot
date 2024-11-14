@@ -1,5 +1,6 @@
 import os
 
+from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts.chat import HumanMessagePromptTemplate
@@ -8,6 +9,8 @@ from retrieval import case_search
 
 import streamlit as st
 
+load_dotenv()
+
 llm = ChatOpenAI(
   model="gpt-4o", 
   temperature=0, 
@@ -15,8 +18,29 @@ llm = ChatOpenAI(
   max_tokens=4096
 )
 
-def make_document(recipient: str, sender: str, date: str, query: str):
-  system_template = """
+def make_document(
+  system00: str,
+  system01: str,
+  system02: str,
+  system03: str,
+  system04: str,
+  system05: str,
+  system06: str,
+  system07: str,
+  system08: str,
+  system10: str,
+  system11: str,
+  system12: str,
+  system13: str,
+  system14: str,
+  system15: str,
+  system16: str,
+  system17: str,
+  system18: str,
+  system19: str,
+  system20: str
+):
+  system_template = f"""
     You act as the following prompts:
 
     # Legal Notice Drafting Team - Agentic Workflow Prompt
@@ -35,7 +59,49 @@ def make_document(recipient: str, sender: str, date: str, query: str):
     ## Process
 
     1. **Information Gathering and Analysis** (Lisa)
-      - Collect the following from the user: 1. {Recipient}, 2. {Sender}, 3. {Date}, 4. {Subject}, 5. {Content}
+      - Collect the following from the user: 
+        0. Q. 안녕하세요? 이름을 알려주세요.
+           A. {system00}
+        1. Q. 어떤 사기 피해를 입으셨나요?
+           A. {system01}
+        2. Q. 피고소인의 직업이나 신분에 대해 알려주세요.
+           A. {system02}
+        3. Q. 고객님의 신분도 알려주세요.
+           A. {system03}
+        4. Q. 사건이 일어난 일시는 언제인가요? 
+           A. {system04}
+        5. Q. 사건이 일어난 장소는 어디인가요?
+           A. {system05}
+        6. Q. 고객께서는 판매자입니까 구매자입니까?
+           A. {system06}
+        7. Q. 처음에 피고소인(들)이 어떻게 접근했습니까? (피고소인을 알게 된 경위)
+           A. {system07}
+        8. Q. 어떤 중고거래 플랫폼을 사용했습니까?
+           A. {system08}
+        9. Q. 피고소인들은 실명을 인증하고 휴대폰 번호가 등록된 정식 회원이었습니까?
+           A. {system09}
+        10. Q. 피고소인이 무엇을 판매한다고 하던가요?(구매자인 경우) 또는 고객께서는 무엇을 판매하려고 어떤 글을 올렸습니까?(판매자인 경우)
+            A. {system10}
+        11. Q. 어떤 방식으로 상품을 받고 돈을 지불하는 걸로 결정했었나요?
+            A. {system11}
+        12. Q. 피고소인 뭐라고 거짓말을 하여 고소인을 속이던가요?
+            A. {system12}
+        13. Q. 재산은 어떻게 마련했습니까?(구매자인 경우) 또는 판매하였던 물품은 어떻게 마련했습니까?(판매자인 경우)
+            A. {system13}
+        14. Q. 재산의 처분은 어떻게 하였습니까?(구매자인 경우) 또는 물품 대금 중 일부도 받지 못했습니까?(판매자인 경우)
+            A. {system14}
+        15. Q. 거짓말임을 깨닫게 된 계기는 무엇입니까?
+            A. {system15}
+        16. Q. 다른 피해 사실도 있습니까? 
+            A. {system16}
+        17. Q. 고소하게 된 동기는 무엇입니까?
+            A. {system17}
+        18. Q. 사건과 관련하여 민형사를 진행하고 있습니까?
+            A. {system18}
+        19. Q. 고소장의 수신인은 누구입니까?
+            A. {system19}
+        20. Q. 고소장의 접수일을 입력하여 주세요.
+            A. {system20}
       - Analyze and distribute the information to team members
 
     2. **Draft Creation** (Jenny)
@@ -67,19 +133,19 @@ def make_document(recipient: str, sender: str, date: str, query: str):
     ## Final Output Format
 
     ```
-    수신: [Recipient Information]
-    발신: [Sender Information]
-    날짜: [Date of Writing]
+    수신: {system19}
+    발신: {system00}
+    날짜: {system20}
 
-    제목: [Notice Subject]
+    제목: 고소장
 
     [Main Body]
 
     - Key facts
-    - Requirements or notification contents
-    - Deadline (if applicable)
-    - Legal basis (if necessary)
-
+    - 고소의 취지
+    - 범죄 사실
+    - 고소 이유
+    
     [Conclusion and guidance on further actions]
 
     [Sender's Signature]
@@ -91,43 +157,48 @@ def make_document(recipient: str, sender: str, date: str, query: str):
 
     ## Examples
 
-    Example 1: Notice for Rent Payment and Contract Termination
+    Example 1
 
     ```
-    제목 : 계약 만료일에 따른 임대차 보증금 반환 및 계약 불이행 시 법적 근거에 따른 지연손해금 요청
+    3. 고소취지
+       - 고소인은 피고소인을 중고거래 사기죄로 고소하오니 처벌하여 주시기 바랍니다.
 
-    1. 귀하의 무궁한 발전을 기원합니다.
-
-    2. 귀하는 지난 20XX년 A월 B일 본인과 아래의 내용과 같은 계약을 체결하였습니다.
-    - 임대목적물 :
-    - 임대차기간 : 20XX년 A월 B일 - 20YY년 C월 D일까지
-    - 임대차 보증금 : 원
-
-    3. 본인은 위 임대차계약 상 임대차기간 만료일보다 4개월 전인 20YY년 E월에 귀하에게 더 이상 임대계약을 연장할 의사가 없음을 통지하였기 때문에, 임대차기간 만료일까지 임대차보증금을 반환할 것을 요청하였습니다. [불이행]
-
-    4. 귀하 역시 임대차계약 해지에 동의하였고, 귀하의 요청에 따라 AA부동산에 해당 물건의 전세 매물로 게재할 수 있도록 요청하였고 협조하였습니다.
-
-    5. 본인은 귀하에게 이미 알려드린 새로운 전세계약을 위해 보증금 반환이 필수 불가결함에 따라 20YY년 F월 G일까지 보증금 반환을 요청을 드리며 빠른 시일내에 임차보증금을 본인의 은행계좌로 반환하여 주시기 바랍니다.
-
-    6. 계약 불이행이 발생하는 경우, 민법 제397조의 금전채무불이행에 대한 특칙에 따라서 연 100분의 5의 지연손해금을 요청하겠습니다.
-
-    7. 또한 소송촉진 등에 관한 특례법에 따라 소장 등이 귀하에게 송달된 날부터는 대통령령으로 정하는 법정이율에 따라 연 100분의 12의 지연손해금을 요청하겠습니다.
-
-    20ZZ년 H월 I일
+    4. 범죄사실
+       - 피고소인은 경호원 이고 고소인은 경비원 입니다. 
+       - 2019-09-04경 번개장터에서 고소인은 구매자로써, 양복을 판매 한다, 라고 게시한 피고소인의 글을 보고 피고소인에게 연락을 하여 알게 되었습니다. 
+       - 당시 피고소인은 정식 회원으로  등록 되어 있었습니다. 
+       - 피고소인의 글은 양복과 넥타이를 판매 한다, 라는 내용으로 되어 있 었습니다. 
+       - 고소인이 피고소인의 계좌로 거래대금을 송금하면 피고소인은 거래 물품을 고소인의 자택 주소로 발송해 주기로 하였습니다.
+       - 피고소인은 물품대금을 입금받고 물품을 발송하지 않았습니다.
+       - 고소인은 월급으로 물품 대금을 마련 하였습니다.
+       - 그리고 고소인은 피고소인의 계좌로 30만원을 송금 하였습니다.
+       - 그런데 고소인은 피고소인이 물품대금 입금받고 자신의 전화를 차단하여 사기임을 깨닫게 되었습니다.
+       - 고소인은 다른 피해는 없습니다.
+       
+    5. 고소이유
+       - 이에 고소인은 피해금액을 돌려 받기 위해 고소를 결심하게 되었 습니다.
     ```
 
-    Example 2: Lease Agreement Termination Notice
+    Example 2
 
     ```
-    주택 월세계약서 정당성 입증요청서[샘플]
+    3. 고소취지 
+       - 고소인은 피고소인을 중고거래 사기죄로 고소하오니 처벌하여 주시기 바랍니다.
 
-    1. 본인은 20AA. B.CD. EF공인중개사(GH동 IJK-LM 소재) NO를 통하여 월세계약을 체결하고 위 본인의 주소로 20AA. B. PQ. 이사하면서 월세 보증금 RST만원을 지불하고 20AA. U. VW. 위 XY씨에게 1개월분의 월세 ZA만원(BB은행 CCCCCC-DD-EEEEEE)을 송금하였습니다.
+    4. 범죄사실
+       - 피고소인은 휴대폰 판매점 직원 이고 고소인은 대학생입니다. 
+       - 2019-07-06경 번개장터에서 고소인은 구매자로써, 갤럭시 스마트폰 30만원에 판매한다, 라고 게시한 피고소인의 글을 보고 피고소인에게 연락을 하여 알게 되었습니다. 
+       - 당시 피고소인은 정식 회원으로  등록 되어 있었습니다. 
+       - 피고소인의 글은 갤럭시 스마트폰 30만원에 판매한다, 라는 내용으 로 되어 있었습니다. 
+       - 고소인이 거래대금을 피고소인이 알려준 계좌로 송금하면 피고소인 은 거래 물품을 고소인의 주소지로 퀵 서비스를 통해 발송해 주기로 하였습니다.
+       - 피고소인은 고소인이 구매한것과 다른 상품을 발송하였습니다.
+       - 고소인은 예금으로 물품 대금을 마련 하였습니다.
+       - 그리고 고소인은 피고소인이 알려준 계좌로 30만원을 입금 하였습 니다.
+       - 그런데 고소인은 피고소인이 환불을 거부하여 사기임을 깨닫게 되었습니다.
+       - 고소인은 다른 피해는 없습니다.
 
-    2. 그런데 20AA. F. G.경 HI씨라는 사람이 건물등기부등본을 소지하고 위 본인이 거주하고 있는 곳으로 찾아와 "자신이 주인인데 누구와 계약하고 입주하였는지 당장 조치하고 나가달라"고 하여 XY씨에게 연락하여 원만한 조치가 이루어지길 요청하였습니다.
-
-    3. 그러나 20AA. J. KL. 현재까지 아무런 통보가 없어 당분간 월세 송금을 유보하겠으며 XY씨은 계약의 정당성을 입증하지 못하면 원인무효 계약으로 월세보증금 반환청구는 물론 이사비용 지불, 정신적 피해 등의 손해배상을 청구코자 하니 이점 양지하여 주시기 바랍니다.
-
-    첨부 : 주택 월세계약서 사본 1부.
+    5. 고소이유
+       - 이에 고소인은 피해금액을 돌려 받고 피고소인의 처벌을 원하여 고 소를 결심 하게 되었습니다.
     ```
 
     Follow this prompt to perform your role-specific tasks, collaborating to produce professional and effective legal notices in Korean, similar to the provided examples.
@@ -139,15 +210,14 @@ def make_document(recipient: str, sender: str, date: str, query: str):
     - Tom (Format Reviewer): Ensure the final document follows the format and style shown in the examples.
 
     Remember to adapt the content to the specific situation while maintaining the professional tone and structure demonstrated in these examples.
-  """
-  
+  """ 
   prompt = ChatPromptTemplate.from_messages([
     ("system", system_template),
   ])
   
-  template = []
-  
-  template += [{'text': query}]
+  template = []  
+  template += [{'text': system_template}]  
+
   prompt += HumanMessagePromptTemplate.from_template(template=template)
   
   return prompt | llm | StrOutputParser()
@@ -169,20 +239,99 @@ st.title("고소장 생성")
 st.write("---")
 
 # Text input
-recipient = st.text_input("수신인")
-sender = st.text_input("발신인")
-date = st.text_input("날짜")
-title = st.text_input("제목")
-
-
+system00 = st.text_input("안녕하세요? 이름을 알려주세요.")
+system01 = st.text_input("어떤 사기 피해를 입으셨나요?")
+system02 = st.text_input("피고소인의 직업이나 신분에 대해 알려주세요.")
+system03 = st.text_input("고객님의 신분도 알려주세요.")
+system04 = st.text_input("사건이 일어난 일시는 언제인가요?")
+system05 = st.text_input("사건이 일어난 장소는 어디인가요?")
+system06 = st.text_input("고객께서는 판매자입니까 구매자입니까?")
+system07 = st.text_input("처음에 피고소인(들)이 어떻게 접근했습니까? (피고소인을 알게 된 경위)")
+system08 = st.text_input("어떤 중고거래 플랫폼을 사용했습니까?")
+system09 = st.text_input("피고소인들은 실명을 인증하고 휴대폰 번호가 등록된 정식 회원이었습니까?")
+system10 = st.text_input("피고소인이 무엇을 판매한다고 하던가요?(구매자인 경우) 또는 고객께서는 무엇을 판매하려고 어떤 글을 올렸습니까?(판매자인 경우)")
+system11 = st.text_input("어떤 방식으로 상품을 받고 돈을 지불하는 걸로 결정했었나요?")
+system12 = st.text_input("피고소인 뭐라고 거짓말을 하여 고소인을 속이던가요?")
+system13 = st.text_input("재산은 어떻게 마련했습니까?(구매자인 경우) 또는 판매하였던 물품은 어떻게 마련했습니까?(판매자인 경우)")
+system14 = st.text_input("재산의 처분은 어떻게 하였습니까?(구매자인 경우) 또는 물품 대금 중 일부도 받지 못했습니까?(판매자인 경우)")
+system15 = st.text_input("거짓말임을 깨닫게 된 계기는 무엇입니까?")
+system16 = st.text_input("다른 피해 사실도 있습니까?")
+system17 = st.text_input("고소하게 된 동기는 무엇입니까?")
+system18 = st.text_input("사건과 관련하여 민형사를 진행하고 있습니까?")
+system19 = st.text_input("고소장의 수신인은 누구입니까?")
+system20 = st.text_input("고소장의 접수일을 입력하여 주세요.")
 
 if st.button('생성하기'):
   with st.spinner('생성하는 중...'):
-    case = case_retrieval(recipient, sender, date, title)
-    chain = make_document(recipient, sender, date, title) 
-    response = chain.invoke(case)
+    # case = case_retrieval(recipient, sender, date, title)
+    chain = make_document(
+      system00,
+      system01,
+      system02,
+      system03,
+      system04,
+      system05,
+      system06,
+      system07,
+      system08,
+      system10,
+      system11,
+      system12,
+      system13,
+      system14,
+      system15,
+      system16,
+      system17,
+      system18,
+      system19,
+      system20
+    ) 
     
-    print('1: ', case)
-    print('2: ', response)
-
+    query = f'''
+      0. Q. 안녕하세요? 이름을 알려주세요.
+          A. {system00},
+      1. Q. 어떤 사기 피해를 입으셨나요?
+          A. {system01},
+      2. Q. 피고소인의 직업이나 신분에 대해 알려주세요.
+          A. {system02},
+      3. Q. 고객님의 신분도 알려주세요.
+          A. {system03},
+      4. Q. 사건이 일어난 일시는 언제인가요? 
+          A. {system04},
+      5. Q. 사건이 일어난 장소는 어디인가요?
+          A. {system05},
+      6. Q. 고객께서는 판매자입니까 구매자입니까?
+          A. {system06},
+      7. Q. 처음에 피고소인(들)이 어떻게 접근했습니까? (피고소인을 알게 된 경위)
+          A. {system07},
+      8. Q. 어떤 중고거래 플랫폼을 사용했습니까?
+          A. {system08},
+      9. Q. 피고소인들은 실명을 인증하고 휴대폰 번호가 등록된 정식 회원이었습니까?
+          A. {system09},
+      10. Q. 피고소인이 무엇을 판매한다고 하던가요?(구매자인 경우) 또는 고객께서는 무엇을 판매하려고 어떤 글을 올렸습니까?(판매자인 경우)
+          A. {system10},
+      11. Q. 어떤 방식으로 상품을 받고 돈을 지불하는 걸로 결정했었나요?
+          A. {system11},
+      12. Q. 피고소인 뭐라고 거짓말을 하여 고소인을 속이던가요?
+          A. {system12},
+      13. Q. 재산은 어떻게 마련했습니까?(구매자인 경우) 또는 판매하였던 물품은 어떻게 마련했습니까?(판매자인 경우)
+          A. {system13},
+      14. Q. 재산의 처분은 어떻게 하였습니까?(구매자인 경우) 또는 물품 대금 중 일부도 받지 못했습니까?(판매자인 경우)
+          A. {system14},
+      15. Q. 거짓말임을 깨닫게 된 계기는 무엇입니까?
+          A. {system15},
+      16. Q. 다른 피해 사실도 있습니까? 
+          A. {system16},
+      17. Q. 고소하게 된 동기는 무엇입니까?
+          A. {system17},
+      18. Q. 사건과 관련하여 민형사를 진행하고 있습니까?
+          A. {system18},
+      19. Q. 고소장의 수신인은 누구입니까?
+          A. {system19}
+      20. Q. 고소장의 접수일을 입력하여 주세요.
+          A. {system20}
+    '''
+    
+    response = chain.invoke({"query": query + "에 대한 정보를 바탕으로 예시와 같은 고소장을 만들어 줘!"})
+    
     st.write(response)
